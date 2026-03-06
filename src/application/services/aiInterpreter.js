@@ -29,6 +29,7 @@ class AIInterpreter {
 
       // GET_MONTH_SUMMARY - Consultar resumen del mes
       if (this.isSummaryQuery(msg)) {
+        console.log(`✅ Resumen detectado, parseando período...`);
         const period = this.parseSummaryPeriod(msg);
         return this.createIntent('GET_MONTH_SUMMARY', { period });
       }
@@ -51,6 +52,7 @@ class AIInterpreter {
 
       // BEST_DAY - Mejor día
       if (this.isBestDayQuery(msg)) {
+        console.log(`✅ Mejor día detectado, extrayendo período...`);
         const period = this.extractBestDayPeriod(msg);
         return this.createIntent('BEST_DAY', { period });
       }
@@ -119,7 +121,10 @@ class AIInterpreter {
    * Detecta si el mensaje es una consulta de resumen
    */
   isSummaryQuery(msg) {
-    return /(resumen|total|suma|cuánto llevo|cuanto llevo)/i.test(msg) && !/actualizar|cambiar/i.test(msg);
+    console.log(`🔍 Verificando resumen en: "${msg}"`);
+    const result = /(resumen|total|suma|cuánto llevo|cuanto llevo)/i.test(msg) && !/actualizar|cambiar/i.test(msg);
+    console.log(`🎯 Resultado resumen: ${result}`);
+    return result;
   }
 
   /**
@@ -147,7 +152,10 @@ class AIInterpreter {
    * Detecta si el mensaje es una consulta del mejor día
    */
   isBestDayQuery(msg) {
-    return /(mejor día|mejor dia|día mejor|dia mejor)/i.test(msg);
+    console.log(`🔍 Verificando mejor día en: "${msg}"`);
+    const result = /(mejor día|mejor dia|día mejor|dia mejor)/i.test(msg);
+    console.log(`🎯 Resultado mejor día: ${result}`);
+    return result;
   }
 
   /**
@@ -333,11 +341,13 @@ class AIInterpreter {
     
     // Patrón: "resumen enero 2024" o "resumen enero"
     for (const [monthName, monthNum] of Object.entries(monthMap)) {
-      const monthPattern = new RegExp(`${monthName}\\s+(\\d{4})?`, 'i');
+      // Buscar el nombre del mes con o sin año después
+      const monthPattern = new RegExp(`\\b${monthName}\\b(\\s+(\\d{4}))?`, 'i');
       const match = lowerMsg.match(monthPattern);
       if (match) {
-        const year = match[1] || new Date().getFullYear();
+        const year = match[2] || new Date().getFullYear();
         period = `${year}-${monthNum}`;
+        console.log(`📅 Mes detectado: ${monthName} ${year} → ${period}`);
         break;
       }
     }
