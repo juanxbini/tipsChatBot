@@ -140,7 +140,10 @@ class AIInterpreter {
    * Detecta si el mensaje es una consulta de comparación de meses
    */
   isCompareMonthsQuery(msg) {
-    return /(comparar meses|compara meses|comparación meses)/i.test(msg);
+    console.log(`🔍 Verificando comparar meses en: "${msg}"`);
+    const result = /(comparar\s+\d+\s+meses|comparar\s+meses|compara\s+meses|comparación\s+meses)/i.test(msg);
+    console.log(`🎯 Resultado comparar meses: ${result}`);
+    return result;
   }
 
   /**
@@ -204,9 +207,33 @@ class AIInterpreter {
 
   /**
    * Detecta si el mensaje es un registro de propina simple
+   * Ahora es más estricto para evitar falsos positivos
    */
   isSingleEntry(msg) {
-    return /\d+/.test(msg);
+    // No debe contener palabras de comandos de estadísticas
+    const statisticalKeywords = /(comparar|tendencia|mejor|promedio|resumen|meses|mes|día|dia|semana|año)/i;
+    
+    // No debe ser una pregunta
+    const questionPatterns = /(¿|cuánto|cuanto|qué|que|cómo|como|dónde|donde|cuándo|cuando)/i;
+    
+    // No debe ser solo un número o comando
+    const justNumber = /^\d+$/.test(msg.trim());
+    
+    // Debe tener un número pero no ser comando estadístico ni pregunta
+    const hasNumber = /\d+/.test(msg);
+    const hasStatistical = statisticalKeywords.test(msg);
+    const hasQuestion = questionPatterns.test(msg);
+    
+    console.log(`🔍 Verificando single entry en: "${msg}"`);
+    console.log(`  - Tiene número: ${hasNumber}`);
+    console.log(`  - Tiene estadísticas: ${hasStatistical}`);
+    console.log(`  - Tiene pregunta: ${hasQuestion}`);
+    console.log(`  - Es solo número: ${justNumber}`);
+    
+    const result = hasNumber && !hasStatistical && !hasQuestion && !justNumber;
+    console.log(`🎯 Resultado single entry: ${result}`);
+    
+    return result;
   }
 
   // ==================== MÉTODOS DE EXTRACCIÓN ====================
@@ -292,10 +319,11 @@ class AIInterpreter {
    * @returns {number} Cantidad de meses (3 por defecto, máximo 12)
    */
   extractMonthsToCompare(msg) {
-    // Buscar patrón: "comparar meses 7" o "comparar meses 12"
-    const match = msg.match(/comparar meses\s+(\d+)/i);
+    // Buscar patrón: "comparar 2 meses", "comparar meses 7" o "comparar meses 12"
+    const match = msg.match(/comparar\s+(\d+)\s+meses|comparar meses\s+(\d+)/i);
     if (match) {
-      const months = parseInt(match[1]);
+      // El número puede estar en match[1] o match[2] dependiendo del patrón
+      const months = parseInt(match[1] || match[2]);
       // Limitar entre 1 y 12 meses
       return Math.min(Math.max(months, 1), 12);
     }
