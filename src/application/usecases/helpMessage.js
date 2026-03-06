@@ -16,11 +16,21 @@ class HelpMessage {
 • "hoy no trabajé" - Marca hoy como no trabajado
 • "ayer no trabajé" - Marca ayer como no trabajado
 
-📈 **Consultas:**
+📈 **Consultas y Estadísticas:**
 • "hoy" - Muestra registro de hoy
-• "resumen" o "resumen del mes" - Muestra resumen mensual
+• "resumen" - Resumen del mes actual
+• "resumen enero 2024" - Resumen de mes específico
 • "promedio" - Muestra promedio diario
 • "días no trabajados" - Lista días no trabajados
+
+📊 **Estadísticas Avanzadas:**
+• "comparar meses" - Compara últimos 3 meses
+• "comparar meses 7" - Compara últimos 7 meses (máx 12)
+• "tendencia semanal" - Muestra evolución semana a semana
+• "mejor día" - Mejor día histórico
+• "mejor día esta semana" - Mejor día de la semana actual
+• "mejor día este mes" - Mejor día del mes actual
+• "promedio por día semana" - Promedio por lunes, martes, etc.
 
 🔄 **Actualizar:**
 • "actualizar hoy 600" - Modifica propina de hoy
@@ -31,6 +41,10 @@ class HelpMessage {
 • "La semana pasada: lunes 200, martes 400, viernes 500"
 • "¿Cuánto es el promedio este mes?"
 • "Mostrame los días que no trabajé"
+• "Comparame los últimos 6 meses"
+• "¿Cuál es mi mejor día histórico?"
+• "¿Cómo es mi tendencia semanal?"
+• "¿Qué día de la semana soy más productivo?"
 
 🎯 **Tips:**
 • Podés escribir en lenguaje natural

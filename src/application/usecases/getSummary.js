@@ -11,7 +11,18 @@ class GetSummary {
       const workedDays = await TipRepository.getWorkedDaysInPeriod(intent.period);
       const totalTips = await TipRepository.getTotalTipsInPeriod(intent.period);
 
-      const periodLabel = intent.period === 'current_month' ? 'este mes' : intent.period;
+      // Formatear etiqueta del período para mostrar
+      let periodLabel;
+      if (intent.period === 'current_month') {
+        periodLabel = 'este mes';
+      } else if (intent.period.match(/^\d{4}-\d{2}$/)) {
+        const [year, month] = intent.period.split('-');
+        const monthNames = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 
+                          'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+        periodLabel = `${monthNames[parseInt(month) - 1]} ${year}`;
+      } else {
+        periodLabel = intent.period;
+      }
       
       let response = `📊 **Resumen de ${periodLabel}**\n\n`;
       
@@ -23,8 +34,17 @@ class GetSummary {
       response += `💰 **Total propinas:** $${totalTips.total}\n`;
       response += `📈 **Promedio diario:** $${Math.round(totalTips.total / totalTips.count)}\n`;
       response += `👷 **Días trabajados:** ${workedDays}\n`;
-      response += `📅 **Total días:** ${tips.length}\n\n`;
+      response += `📅 **Total días:** ${tips.length}\n`;
+      
+      // Agregar días no trabajados si hay
+      const noWorkDays = tips.length - workedDays;
+      if (noWorkDays > 0) {
+        response += `🚫 **Días no trabajados:** ${noWorkDays}\n`;
+      }
+      
+      response += '\n';
 
+      // Mostrar últimos registros (limitar a 5 para no saturar)
       const lastTips = tips.slice(-5).reverse();
       response += `📋 **Últimos 5 registros:**\n`;
       
@@ -36,6 +56,11 @@ class GetSummary {
           response += `💰 ${dateStr}: $${tip.amount}\n`;
         }
       });
+
+      // Agregar sugerencia si hay muchos registros
+      if (tips.length > 5) {
+        response += `\n💡 *Mostrando los últimos 5 de ${tips.length} registros totales*`;
+      }
 
       return response;
     } catch (error) {

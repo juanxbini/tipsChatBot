@@ -6,6 +6,10 @@ const getToday = require('../usecases/getToday');
 const getSummary = require('../usecases/getSummary');
 const getAverage = require('../usecases/getAverage');
 const getNoWorkDays = require('../usecases/getNoWorkDays');
+const getCompareMonths = require('../usecases/getCompareMonths');
+const getWeeklyTrend = require('../usecases/getWeeklyTrend');
+const getBestDay = require('../usecases/getBestDay');
+const getAverageByWeekday = require('../usecases/getAverageByWeekday');
 const helpMessage = require('../usecases/helpMessage');
 const cheatsheetMessage = require('../usecases/cheatsheetMessage');
 
@@ -36,6 +40,18 @@ class IntentRouter {
         
         case 'GET_NO_WORK_DAYS':
           return await getNoWorkDays.execute(intent, chatId);
+        
+        case 'COMPARE_MONTHS':
+          return await getCompareMonths.execute(intent, chatId);
+        
+        case 'WEEKLY_TREND':
+          return await getWeeklyTrend.execute(intent, chatId);
+        
+        case 'BEST_DAY':
+          return await getBestDay.execute(intent, chatId);
+        
+        case 'AVERAGE_BY_WEEKDAY':
+          return await getAverageByWeekday.execute(intent, chatId);
         
         case 'HELP':
           return await helpMessage.execute(intent, chatId);
@@ -82,6 +98,18 @@ class IntentRouter {
       
       case 'GET_NO_WORK_DAYS':
         return intent.period !== null;
+      
+      case 'COMPARE_MONTHS':
+        return intent.months !== null && intent.months > 0;
+      
+      case 'WEEKLY_TREND':
+        return true;
+      
+      case 'BEST_DAY':
+        return intent.period !== null;
+      
+      case 'AVERAGE_BY_WEEKDAY':
+        return true;
       
       case 'HELP':
         return true;

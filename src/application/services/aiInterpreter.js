@@ -29,12 +29,35 @@ class AIInterpreter {
 
       // GET_MONTH_SUMMARY - Consultar resumen del mes
       if (this.isSummaryQuery(msg)) {
-        return this.createIntent('GET_MONTH_SUMMARY', { period: 'current_month' });
+        const period = this.parseSummaryPeriod(msg);
+        return this.createIntent('GET_MONTH_SUMMARY', { period });
       }
 
       // GET_AVERAGE - Consultar promedio
       if (this.isAverageQuery(msg)) {
         return this.createIntent('GET_AVERAGE', { period: 'current_month' });
+      }
+
+      // COMPARE_MONTHS - Comparar meses
+      if (this.isCompareMonthsQuery(msg)) {
+        const months = this.extractMonthsToCompare(msg);
+        return this.createIntent('COMPARE_MONTHS', { months });
+      }
+
+      // WEEKLY_TREND - Tendencia semanal
+      if (this.isWeeklyTrendQuery(msg)) {
+        return this.createIntent('WEEKLY_TREND');
+      }
+
+      // BEST_DAY - Mejor día
+      if (this.isBestDayQuery(msg)) {
+        const period = this.extractBestDayPeriod(msg);
+        return this.createIntent('BEST_DAY', { period });
+      }
+
+      // AVERAGE_BY_WEEKDAY - Promedio por día de semana
+      if (this.isAverageByWeekdayQuery(msg)) {
+        return this.createIntent('AVERAGE_BY_WEEKDAY');
       }
 
       // GET_NO_WORK_DAYS - Consultar días no trabajados
@@ -96,7 +119,7 @@ class AIInterpreter {
    * Detecta si el mensaje es una consulta de resumen
    */
   isSummaryQuery(msg) {
-    return /(resumen|total|suma|cuánto llevo|cuanto llevo|mes)/i.test(msg) && !/actualizar|cambiar/i.test(msg);
+    return /(resumen|total|suma|cuánto llevo|cuanto llevo)/i.test(msg) && !/actualizar|cambiar/i.test(msg);
   }
 
   /**
@@ -104,6 +127,34 @@ class AIInterpreter {
    */
   isAverageQuery(msg) {
     return /(promedio|media|por día|por dia)/i.test(msg);
+  }
+
+  /**
+   * Detecta si el mensaje es una consulta de comparación de meses
+   */
+  isCompareMonthsQuery(msg) {
+    return /(comparar meses|compara meses|comparación meses)/i.test(msg);
+  }
+
+  /**
+   * Detecta si el mensaje es una consulta de tendencia semanal
+   */
+  isWeeklyTrendQuery(msg) {
+    return /(tendencia semanal|tendencia semana|evolución semanal)/i.test(msg);
+  }
+
+  /**
+   * Detecta si el mensaje es una consulta del mejor día
+   */
+  isBestDayQuery(msg) {
+    return /(mejor día|mejor dia|día mejor|dia mejor)/i.test(msg);
+  }
+
+  /**
+   * Detecta si el mensaje es una consulta de promedio por día de semana
+   */
+  isAverageByWeekdayQuery(msg) {
+    return /(promedio por día semana|promedio por dia semana|promedio lunes|promedio martes|promedio miércoles|promedio jueves|promedio viernes|promedio sábado|promedio domingo)/i.test(msg);
   }
 
   /**
@@ -156,23 +207,54 @@ class AIInterpreter {
    * @returns {number|null} Monto extraído o null
    */
   extractAmount(msg) {
-    // Primero intentar encontrar el último número (para fechas como "26/1/2026 1")
-    const allNumbers = msg.match(/\d+/g);
-    if (allNumbers && allNumbers.length > 0) {
-      // Si hay múltiples números, asumir que el último es el monto
-      // y los primeros son parte de la fecha
-      const lastNumber = allNumbers[allNumbers.length - 1];
+    // Para comandos de actualización, buscar patrones específicos primero
+    if (/(actualizar|cambiar|modificar|corregir|editar)/i.test(msg)) {
+      // Patrones para actualizar: "actualizar 2/3/26 500" o "actualizar 500 2/3/26"
+      const updatePatterns = [
+        // actualizar fecha monto
+        /(\d{1,2}\/\d{1,2}(?:\/\d{4})?)\s+(\d+)/,
+        // actualizar monto fecha  
+        /(\d+)\s+(\d{1,2}\/\d{1,2}(?:\/\d{4})?)/
+      ];
       
-      // Validar que sea un monto razonable (no un año)
-      const amount = parseInt(lastNumber);
-      if (amount < 10000) { // Montos razonables no deberían superar 9999
-        return amount;
+      for (const pattern of updatePatterns) {
+        const match = msg.match(pattern);
+        if (match) {
+          // Determinar cuál es el monto (siempre el que no parece fecha)
+          const candidate1 = parseInt(match[1]);
+          const candidate2 = parseInt(match[2]);
+          
+          // El monto razonable no debería superar 9999 ni ser un año válido
+          if (candidate1 < 10000 && candidate1 > 0) {
+            return candidate1;
+          }
+          if (candidate2 < 10000 && candidate2 > 0) {
+            return candidate2;
+          }
+        }
       }
     }
     
-    // Fallback al método original
+    // Método general: buscar todos los números
+    const allNumbers = msg.match(/\d+/g);
+    if (allNumbers && allNumbers.length > 0) {
+      // Si hay múltiples números, intentar identificar cuál es el monto
+      const amounts = allNumbers.map(n => parseInt(n)).filter(n => n > 0 && n < 10000);
+      
+      if (amounts.length > 0) {
+        // Devolver el último monto válido encontrado
+        return amounts[amounts.length - 1];
+      }
+    }
+    
+    // Fallback: buscar cualquier número razonable
     const match = msg.match(/\d+/);
-    return match ? parseInt(match[0]) : null;
+    if (match) {
+      const amount = parseInt(match[0]);
+      return (amount > 0 && amount < 10000) ? amount : null;
+    }
+    
+    return null;
   }
 
   /**
@@ -192,6 +274,93 @@ class AIInterpreter {
         return { date, amount };
       })
       .filter(entry => entry !== null); // Filtrar entradas inválidas
+  }
+
+  /**
+   * Extrae la cantidad de meses a comparar
+   * @param {string} msg - Mensaje a analizar
+   * @returns {number} Cantidad de meses (3 por defecto, máximo 12)
+   */
+  extractMonthsToCompare(msg) {
+    // Buscar patrón: "comparar meses 7" o "comparar meses 12"
+    const match = msg.match(/comparar meses\s+(\d+)/i);
+    if (match) {
+      const months = parseInt(match[1]);
+      // Limitar entre 1 y 12 meses
+      return Math.min(Math.max(months, 1), 12);
+    }
+    return 3; // Por defecto: 3 meses
+  }
+
+  /**
+   * Extrae el período para "mejor día"
+   * @param {string} msg - Mensaje a analizar
+   * @returns {string} Período: 'all', 'this_week', 'this_month'
+   */
+  extractBestDayPeriod(msg) {
+    const lowerMsg = msg.toLowerCase();
+    
+    if (/(esta semana|semana actual)/i.test(msg)) {
+      return 'this_week';
+    }
+    if (/(este mes|mes actual)/i.test(msg)) {
+      return 'this_month';
+    }
+    
+    return 'all'; // Por defecto: histórico
+  }
+
+  /**
+   * Parsea el período para resúmenes desde el mensaje
+   * Soporta: "resumen", "resumen enero", "resumen enero 2024", "resumen 1/2024", "resumen diciembre 2023"
+   * @param {string} msg - Mensaje a analizar
+   * @returns {string} Período en formato 'current_month' o 'YYYY-MM'
+   */
+  parseSummaryPeriod(msg) {
+    // Por defecto: mes actual
+    let period = 'current_month';
+    
+    // Mapeo de meses en español a números
+    const monthMap = {
+      'enero': '01', 'febrero': '02', 'marzo': '03', 'abril': '04',
+      'mayo': '05', 'junio': '06', 'julio': '07', 'agosto': '08',
+      'septiembre': '09', 'setiembre': '09', 'octubre': '10', 
+      'noviembre': '11', 'diciembre': '12'
+    };
+    
+    // Buscar patrones de mes específico
+    const lowerMsg = msg.toLowerCase();
+    
+    // Patrón: "resumen enero 2024" o "resumen enero"
+    for (const [monthName, monthNum] of Object.entries(monthMap)) {
+      const monthPattern = new RegExp(`${monthName}\\s+(\\d{4})?`, 'i');
+      const match = lowerMsg.match(monthPattern);
+      if (match) {
+        const year = match[1] || new Date().getFullYear();
+        period = `${year}-${monthNum}`;
+        break;
+      }
+    }
+    
+    // Patrón: "resumen 1/2024" o "resumen 12/2023"
+    const monthYearPattern = /(\d{1,2})\/(\d{4})/;
+    const monthYearMatch = lowerMsg.match(monthYearPattern);
+    if (monthYearMatch) {
+      const month = monthYearMatch[1].padStart(2, '0');
+      const year = monthYearMatch[2];
+      period = `${year}-${month}`;
+    }
+    
+    // Patrón: "resumen 2024" (todo el año - usar enero)
+    const yearPattern = /resumen\s+(\d{4})/;
+    const yearMatch = lowerMsg.match(yearPattern);
+    if (yearMatch && period === 'current_month') {
+      const year = yearMatch[1];
+      period = `${year}-01`; // Enero del año especificado
+    }
+    
+    console.log(`📅 Período detectado: ${period}`);
+    return period;
   }
 
   /**
@@ -292,6 +461,7 @@ class AIInterpreter {
     const validIntents = [
       "ADD_TIP", "UPDATE_TIP", "ADD_MULTIPLE_TIPS", "MARK_NO_WORK", 
       "GET_TODAY", "GET_MONTH_SUMMARY", "GET_AVERAGE", "GET_NO_WORK_DAYS", 
+      "COMPARE_MONTHS", "WEEKLY_TREND", "BEST_DAY", "AVERAGE_BY_WEEKDAY",
       "HELP", "CHEATSHEET", "UNKNOWN"
     ];
 
@@ -356,9 +526,15 @@ class AIInterpreter {
    * @returns {Date} Objeto Date correspondiente
    */
   normalizeDate(date) {
-    // Obtener fecha actual normalizada a medianoche
+    // Obtener fecha actual normalizada a medianoche en zona horaria de Argentina
     const today = new Date();
+    // Ajustar a zona horaria de Argentina (UTC-3)
+    const argentinaOffset = -3;
+    const localOffset = today.getTimezoneOffset() / 60;
+    const offsetDiff = localOffset - argentinaOffset;
+    
     today.setHours(0, 0, 0, 0);
+    today.setHours(today.getHours() + offsetDiff);
 
     // Convertir fechas relativas a absolutas
     switch (date) {
@@ -374,25 +550,41 @@ class AIInterpreter {
         return twoDaysAgo;
       default:
         // Para fechas en formato YYYY-MM-DD, crear objeto Date directamente
-        return new Date(date);
+        // y ajustar a zona horaria de Argentina
+        const absoluteDate = new Date(date);
+        absoluteDate.setHours(absoluteDate.getHours() + offsetDiff);
+        return absoluteDate;
     }
   }
 
   /**
-   * Obtiene la fecha de hoy en formato ISO
+   * Obtiene la fecha de hoy en formato ISO (ajustada a zona horaria de Argentina)
    * @returns {string} Fecha de hoy YYYY-MM-DD
    */
   getTodayISO() {
-    return new Date().toISOString().split('T')[0];
+    const today = new Date();
+    // Ajustar a zona horaria de Argentina (UTC-3)
+    const argentinaOffset = -3;
+    const localOffset = today.getTimezoneOffset() / 60;
+    const offsetDiff = localOffset - argentinaOffset;
+    
+    today.setHours(today.getHours() + offsetDiff);
+    return today.toISOString().split('T')[0];
   }
 
   /**
-   * Obtiene la fecha de ayer en formato ISO
+   * Obtiene la fecha de ayer en formato ISO (ajustada a zona horaria de Argentina)
    * @returns {string} Fecha de ayer YYYY-MM-DD
    */
   getYesterdayISO() {
     const yesterday = new Date();
+    // Ajustar a zona horaria de Argentina (UTC-3)
+    const argentinaOffset = -3;
+    const localOffset = yesterday.getTimezoneOffset() / 60;
+    const offsetDiff = localOffset - argentinaOffset;
+    
     yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setHours(yesterday.getHours() + offsetDiff);
     return yesterday.toISOString().split('T')[0];
   }
 }
