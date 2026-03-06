@@ -41,7 +41,9 @@ class AIInterpreter {
 
       // COMPARE_MONTHS - Comparar meses
       if (this.isCompareMonthsQuery(msg)) {
+        console.log(`✅ Comparar meses detectado, extrayendo cantidad...`);
         const months = this.extractMonthsToCompare(msg);
+        console.log(`📊 Meses a comparar: ${months}`);
         return this.createIntent('COMPARE_MONTHS', { months });
       }
 
@@ -451,7 +453,8 @@ class AIInterpreter {
       date: params.date || null,
       amount: params.amount || null,
       period: params.period || null,
-      entries: params.entries || null
+      entries: params.entries || null,
+      months: params.months || null
     };
 
     console.log('✅ Intención creada:', result);
