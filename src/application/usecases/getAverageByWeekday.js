@@ -21,14 +21,14 @@ class GetAverageByWeekday {
       const bestDay = weekdayAverages[0];
       const worstDay = weekdayAverages[weekdayAverages.length - 1];
       
-      // Mostrar tabla de promedios
-      response += `| Día | Promedio | Total | Días Trabajados |\n`;
-      response += `|-----|----------|-------|------------------|\n`;
-      
+      // Mostrar lista de promedios (mejor formato para Telegram)
       weekdayAverages.forEach(day => {
         const emoji = day.weekday === bestDay.weekday ? '🏆' : 
                      day.weekday === worstDay.weekday ? '📉' : '📊';
-        response += `| ${emoji} ${day.weekday} | $${day.average} | $${day.total} | ${day.count} |\n`;
+        response += `${emoji} **${day.weekday}**\n`;
+        response += `   💰 Promedio: $${day.average}\n`;
+        response += `   💸 Total: $${day.total}\n`;
+        response += `   👷 Días trabajados: ${day.count}\n\n`;
       });
       
       // Estadísticas adicionales

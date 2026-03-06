@@ -43,14 +43,14 @@ class GetCompareMonths {
         current.total < worst.total ? current : worst
       );
       
-      // Mostrar tabla comparativa
-      response += `| Mes | Total | Promedio | Días Trabajados |\n`;
-      response += `|-----|-------|----------|-----------------|\n`;
-      
-      monthComparisons.forEach(month => {
+      // Mostrar lista comparativa (mejor formato para Telegram)
+      monthComparisons.forEach((month, index) => {
         const emoji = month.period === bestMonth.period ? '🏆' : 
                      month.period === worstMonth.period ? '📉' : '📊';
-        response += `| ${emoji} ${month.period} | $${month.total} | $${month.average} | ${month.workedDays} |\n`;
+        response += `${index + 1}. ${emoji} **${month.period}**\n`;
+        response += `   💰 Total: $${month.total}\n`;
+        response += `   📈 Promedio: $${month.average}\n`;
+        response += `   👷 Días trabajados: ${month.workedDays}\n\n`;
       });
       
       // Estadísticas adicionales

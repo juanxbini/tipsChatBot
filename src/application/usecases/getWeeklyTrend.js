@@ -23,14 +23,14 @@ class GetWeeklyTrend {
         });
       }
       
-      // Mostrar tabla de tendencia
-      response += `| Semana | Total | Promedio | Días Trabajados |\n`;
-      response += `|--------|-------|----------|-----------------|\n`;
-      
+      // Mostrar lista de tendencia (mejor formato para Telegram)
       weekData.forEach((week, index) => {
         const average = week.workedDays > 0 ? Math.round(week.total / week.workedDays) : 0;
         const emoji = this.getTrendEmoji(index, weekData);
-        response += `| ${emoji} ${week.label} | $${week.total} | $${average} | ${week.workedDays} |\n`;
+        response += `${index + 1}. ${emoji} **${week.label}**\n`;
+        response += `   💰 Total: $${week.total}\n`;
+        response += `   📈 Promedio: $${average}\n`;
+        response += `   👷 Días trabajados: ${week.workedDays}\n\n`;
       });
       
       // Análisis de tendencia
