@@ -10,6 +10,7 @@ const getCompareMonths = require('../usecases/getCompareMonths');
 const getWeeklyTrend = require('../usecases/getWeeklyTrend');
 const getBestDay = require('../usecases/getBestDay');
 const getAverageByWeekday = require('../usecases/getAverageByWeekday');
+const getServerDate = require('../usecases/getServerDate');
 const helpMessage = require('../usecases/helpMessage');
 const cheatsheetMessage = require('../usecases/cheatsheetMessage');
 
@@ -52,6 +53,9 @@ class IntentRouter {
         
         case 'AVERAGE_BY_WEEKDAY':
           return await getAverageByWeekday.execute(intent, chatId);
+        
+        case 'GET_SERVER_DATE':
+          return await getServerDate.execute(intent, chatId);
         
         case 'HELP':
           return await helpMessage.execute(intent, chatId);
@@ -109,6 +113,9 @@ class IntentRouter {
         return intent.period !== null;
       
       case 'AVERAGE_BY_WEEKDAY':
+        return true;
+      
+      case 'GET_SERVER_DATE':
         return true;
       
       case 'HELP':

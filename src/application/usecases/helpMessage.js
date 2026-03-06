@@ -22,6 +22,7 @@ class HelpMessage {
 • "resumen enero 2024" - Resumen de mes específico
 • "promedio" - Muestra promedio diario
 • "días no trabajados" - Lista días no trabajados
+• "date" - Muestra fecha y hora del servidor
 
 📊 **Estadísticas Avanzadas:**
 • "comparar meses" - Compara últimos 3 meses
@@ -34,6 +35,8 @@ class HelpMessage {
 
 🔄 **Actualizar:**
 • "actualizar hoy 600" - Modifica propina de hoy
+• "actualizar 6/3/2026 500" - Modifica propina de fecha específica
+• "actualizar 0" - Marca día como no trabajado
 
 💡 **Ejemplos de uso:**
 • "Hoy hice $350 en propinas"
@@ -45,12 +48,15 @@ class HelpMessage {
 • "¿Cuál es mi mejor día histórico?"
 • "¿Cómo es mi tendencia semanal?"
 • "¿Qué día de la semana soy más productivo?"
+• "¿Qué fecha y hora usa el bot?"
 
 🎯 **Tips:**
 • Podés escribir en lenguaje natural
 • El bot entiende fechas relativas (hoy, ayer, etc.)
 • Usá pesos ($) o números, da igual
-• El recordatorio diario llega a las 23hs
+• El recordatorio diario llega a las 23hs (hora Argentina)
+• El bot usa zona horaria UTC-3 para todos los registros
+• Las estadísticas se muestran en formato lista para mejor visualización
 
 ❓ ¿Necesitás más ayuda? Escribí "ayuda" o "chear" nuevamente.`;
 

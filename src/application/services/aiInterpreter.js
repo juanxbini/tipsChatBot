@@ -52,6 +52,11 @@ class AIInterpreter {
         return this.createIntent('WEEKLY_TREND');
       }
 
+      // GET_SERVER_DATE - Consultar fecha/hora del servidor
+      if (this.isDateQuery(msg)) {
+        return this.createIntent('GET_SERVER_DATE');
+      }
+
       // BEST_DAY - Mejor día
       if (this.isBestDayQuery(msg)) {
         console.log(`✅ Mejor día detectado, extrayendo período...`);
@@ -151,6 +156,13 @@ class AIInterpreter {
    */
   isWeeklyTrendQuery(msg) {
     return /(tendencia semanal|tendencia semana|evolución semanal)/i.test(msg);
+  }
+
+  /**
+   * Detecta si el mensaje es una consulta de fecha/hora del servidor
+   */
+  isDateQuery(msg) {
+    return /^(date|fecha|hora|time)$/i.test(msg);
   }
 
   /**
@@ -514,7 +526,7 @@ class AIInterpreter {
       "ADD_TIP", "UPDATE_TIP", "ADD_MULTIPLE_TIPS", "MARK_NO_WORK", 
       "GET_TODAY", "GET_MONTH_SUMMARY", "GET_AVERAGE", "GET_NO_WORK_DAYS", 
       "COMPARE_MONTHS", "WEEKLY_TREND", "BEST_DAY", "AVERAGE_BY_WEEKDAY",
-      "HELP", "CHEATSHEET", "UNKNOWN"
+      "GET_SERVER_DATE", "HELP", "CHEATSHEET", "UNKNOWN"
     ];
 
     // Validar que la intención sea una de las permitidas
