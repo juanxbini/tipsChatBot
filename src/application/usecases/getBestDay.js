@@ -1,4 +1,5 @@
 const TipRepository = require('../../domain/repositories/TipRepository');
+const Tip = require('../../domain/entities/Tip');
 
 class GetBestDay {
   async execute(intent, chatId) {
@@ -94,7 +95,7 @@ class GetBestDay {
    */
   async getBestDayAllTime() {
     // Usar aggregation para encontrar el día con mayor propina
-    const result = await require('../entities/Tip').aggregate([
+    const result = await Tip.aggregate([
       {
         $match: {
           worked: true,
@@ -126,7 +127,7 @@ class GetBestDay {
     weekEnd.setDate(weekStart.getDate() + 6);
     weekEnd.setHours(23, 59, 59, 999);
     
-    const result = await require('../entities/Tip').aggregate([
+    const result = await Tip.aggregate([
       {
         $match: {
           date: { $gte: weekStart, $lte: weekEnd },
@@ -153,7 +154,7 @@ class GetBestDay {
     const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
     const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
     
-    const result = await require('../entities/Tip').aggregate([
+    const result = await Tip.aggregate([
       {
         $match: {
           date: { $gte: monthStart, $lte: monthEnd },
@@ -176,7 +177,7 @@ class GetBestDay {
    * Obtiene el promedio general de todas las propinas
    */
   async getOverallAverage() {
-    const result = await require('../entities/Tip').aggregate([
+    const result = await Tip.aggregate([
       {
         $match: {
           worked: true,
@@ -204,7 +205,7 @@ class GetBestDay {
     weekStart.setDate(today.getDate() - dayOfWeek);
     weekStart.setHours(0, 0, 0, 0);
     
-    const result = await require('../entities/Tip').aggregate([
+    const result = await Tip.aggregate([
       {
         $match: {
           date: { $gte: weekStart },
@@ -230,7 +231,7 @@ class GetBestDay {
     const today = new Date();
     const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
     
-    const result = await require('../entities/Tip').aggregate([
+    const result = await Tip.aggregate([
       {
         $match: {
           date: { $gte: monthStart },

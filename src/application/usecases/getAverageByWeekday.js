@@ -1,4 +1,5 @@
 const TipRepository = require('../../domain/repositories/TipRepository');
+const Tip = require('../../domain/entities/Tip');
 
 class GetAverageByWeekday {
   async execute(intent, chatId) {
@@ -113,8 +114,6 @@ class GetAverageByWeekday {
    * @returns {Promise<Array>} Array con estadísticas por día
    */
   async getWeekdayAverages() {
-    const Tip = require('../entities/Tip');
-    
     // Usar aggregation para calcular estadísticas por día de semana
     const result = await Tip.aggregate([
       {
