@@ -244,6 +244,8 @@ class AIInterpreter {
    * @returns {number|null} Monto extraído o null
    */
   extractAmount(msg) {
+    console.log(`💰 Extrayendo monto de: "${msg}"`);
+    
     // Para comandos de actualización, buscar patrones específicos primero
     if (/(actualizar|cambiar|modificar|corregir|editar)/i.test(msg)) {
       // Patrones para actualizar: "actualizar 2/3/26 500" o "actualizar 500 2/3/26"
@@ -258,15 +260,24 @@ class AIInterpreter {
         const match = msg.match(pattern);
         if (match) {
           // Determinar cuál es el monto (siempre el que no parece fecha)
-          const candidate1 = parseInt(match[1]);
-          const candidate2 = parseInt(match[2]);
+          const candidate1 = match[1]; // Mantener como string para verificar si es fecha
+          const candidate2 = parseInt(match[2]); // El monto siempre es número
           
-          // El monto razonable no debería superar 9999 ni ser un año válido
-          if (candidate1 < 10000 && candidate1 > 0) {
-            return candidate1;
-          }
-          if (candidate2 < 10000 && candidate2 > 0) {
+          console.log(`  - Candidato 1: "${candidate1}", Candidato 2: ${candidate2}`);
+          
+          // Si candidate1 contiene "/" es una fecha, el monto es candidate2
+          if (candidate1.includes('/') && candidate2 >= 0 && candidate2 < 10000) {
+            console.log(`  ✅ Monto seleccionado: ${candidate2}`);
             return candidate2;
+          }
+          
+          // Si no, verificar cuál es más razonable como monto
+          const num1 = parseInt(candidate1);
+          if (num1 >= 0 && num1 < 10000 && candidate2 >= 0 && candidate2 < 10000) {
+            // Elegir el que no parece año (menor a 100)
+            const selected = num1 < 100 ? candidate2 : num1;
+            console.log(`  ✅ Monto seleccionado: ${selected}`);
+            return selected;
           }
         }
       }
@@ -276,7 +287,7 @@ class AIInterpreter {
     const allNumbers = msg.match(/\d+/g);
     if (allNumbers && allNumbers.length > 0) {
       // Si hay múltiples números, intentar identificar cuál es el monto
-      const amounts = allNumbers.map(n => parseInt(n)).filter(n => n > 0 && n < 10000);
+      const amounts = allNumbers.map(n => parseInt(n)).filter(n => n >= 0 && n < 10000);
       
       if (amounts.length > 0) {
         // Devolver el último monto válido encontrado
@@ -288,7 +299,7 @@ class AIInterpreter {
     const match = msg.match(/\d+/);
     if (match) {
       const amount = parseInt(match[0]);
-      return (amount > 0 && amount < 10000) ? amount : null;
+      return (amount >= 0 && amount < 10000) ? amount : null;
     }
     
     return null;
