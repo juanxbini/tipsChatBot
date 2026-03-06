@@ -1,4 +1,5 @@
 const TipRepository = require('../../domain/repositories/TipRepository');
+const Tip = require('../../domain/entities/Tip');
 
 class GetWeeklyTrend {
   async execute(intent, chatId) {
@@ -11,8 +12,9 @@ class GetWeeklyTrend {
       const weekData = [];
       
       for (const week of weeks) {
-        const tips = await TipRepository.findByPeriod(week.period);
-        const totalTips = await TipRepository.getTotalTipsInPeriod(week.period);
+        // Consultar directamente por rango de fechas en lugar de período mensual
+        const tips = await this.getTipsByDateRange(week.startDate, week.endDate);
+        const totalTips = this.calculateTotalTips(tips);
         
         weekData.push({
           label: week.label,
@@ -125,10 +127,10 @@ class GetWeeklyTrend {
    * @returns {string} Período formateado para consulta
    */
   formatDateRange(startDate, endDate) {
-    // Para simplificar, usamos el formato YYYY-MM del inicio de la semana
-    const year = startDate.getFullYear();
-    const month = (startDate.getMonth() + 1).toString().padStart(2, '0');
-    return `${year}-${month}`;
+    // Devolver rango de fechas en formato YYYY-MM-DD para consulta específica
+    const start = startDate.toISOString().split('T')[0];
+    const end = endDate.toISOString().split('T')[0];
+    return `${start}_${end}`;
   }
   
   /**
@@ -150,6 +152,32 @@ class GetWeeklyTrend {
     } else {
       return '➡️';
     }
+  }
+
+  /**
+   * Obtiene tips por rango de fechas específico
+   * @param {Date} startDate - Fecha de inicio
+   * @param {Date} endDate - Fecha de fin
+   * @returns {Promise<Array>} Array de tips en el rango
+   */
+  async getTipsByDateRange(startDate, endDate) {
+    return await Tip.find({
+      date: { $gte: startDate, $lte: endDate }
+    }).sort({ date: 1 });
+  }
+
+  /**
+   * Calcula total y cantidad de tips
+   * @param {Array} tips - Array de tips
+   * @returns {Object} Objeto con total y count
+   */
+  calculateTotalTips(tips) {
+    const workedTips = tips.filter(tip => tip.worked && tip.amount !== null);
+    const total = workedTips.reduce((sum, tip) => sum + tip.amount, 0);
+    return {
+      total,
+      count: workedTips.length
+    };
   }
 }
 
